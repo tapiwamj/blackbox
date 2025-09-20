@@ -71,48 +71,45 @@ class ServerSocket {
       );
       const start = Date.now();
       const timeout = 5000;
-      while (true) {
+      const interval = setInterval(() => {
         if (Date.now() - start > timeout) {
           console.log("Timeout: no pair found");
-          ServerSocket.CONNECTIONS[my_index].socket.send(JSON.stringify({
-            instruction: "nopairfound"
-          }))
-          break;
+          ServerSocket.CONNECTIONS[my_index].socket.send(
+            JSON.stringify({ instruction: "nopairfound" })
+          );
+          clearInterval(interval);
+          return;
         }
         if (ServerSocket.CONNECTIONS[my_index].status == 1) {
-          break;
+          clearInterval(interval);
+          return;
         }
         const indexes = [];
         ServerSocket.CONNECTIONS.forEach((c, i) => {
           if (c.status === 0) indexes.push(i);
         });
         if (indexes.length > 0) {
+          const pairindex = indexes[0]; // pick first available
+          const my_uid = ServerSocket.CONNECTIONS[my_index].uid;
+          const other_uid = ServerSocket.CONNECTIONS[pairindex].uid;
+
           ServerSocket.CONNECTIONS[my_index].status = 1;
+          ServerSocket.CONNECTIONS[my_index].pair = other_uid;
+
+          ServerSocket.CONNECTIONS[pairindex].status = 1;
+          ServerSocket.CONNECTIONS[pairindex].pair = my_uid;
+          ServerSocket.CONNECTIONS[my_index].socket.send(
+            JSON.stringify({ instruction: "requestOffer" })
+          );
+          ServerSocket.CONNECTIONS[pairindex].socket.send(
+            JSON.stringify({ instruction: "pairFound" })
+          );
+
+          clearInterval(interval);
         }
-        for (const pairindex of indexes) {
-          if (ServerSocket.CONNECTIONS[pairindex].status == 0) {
-            const my_uid = ServerSocket.CONNECTIONS[my_index].uid;
-            const other_uid = ServerSocket.CONNECTIONS[pairindex].uid;
-            ServerSocket.CONNECTIONS[my_index].status = 1;
-            ServerSocket.CONNECTIONS[my_index].pair = other_uid;
-            ServerSocket.CONNECTIONS[my_index].master = master;
-            ServerSocket.CONNECTIONS[pairindex].status = 1;
-            ServerSocket.CONNECTIONS[pairindex].pair = my_uid;
-            ServerSocket.CONNECTIONS[my_index].master = master;
-            ServerSocket.CONNECTIONS[my_index].socket.send(
-              JSON.stringify({
-                instruction: "requestOffer",
-              })
-            );
-            ServerSocket.CONNECTIONS[pairindex].socket.send(
-              JSON.stringify({
-                instruction: "pairFound",
-              })
-            );
-            break;
-          }
-        }
-      }
+      }, 100);
+      //to be removed
+      
     }
   }
 }
