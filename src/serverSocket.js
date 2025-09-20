@@ -64,9 +64,11 @@ class ServerSocket {
     }
     if (obj.instruction == "offer") {
       const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
-      console.log(ServerSocket.CONNECTIONS[index]);
       const pair = ServerSocket.CONNECTIONS[index].pair;
-      ServerSocket.CONNECTIONS[pair].socket.send(
+      const pair_index = ServerSocket.CONNECTIONS.findIndex(
+        (c) => c.uid == pair
+      );
+      ServerSocket.CONNECTIONS[pair_index].socket.send(
         JSON.stringify({
           instruction: "remoteOffer",
           offer: obj.offer,
