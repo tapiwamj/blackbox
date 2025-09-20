@@ -23,6 +23,7 @@ class ServerSocket {
         offer: null,
         answer: null,
         pair: null,
+        searchInterval: null,
       });
       console.log("New client connected");
       // ws.send(
@@ -49,8 +50,11 @@ class ServerSocket {
   handleClose(ws) {
     const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
     if (index !== -1) {
+      const connection = ServerSocket.CONNECTIONS[index];
+      clearInterval(connection.searchInterval);
       ServerSocket.CONNECTIONS.splice(index, 1);
     }
+    console.log("Removed is: " + index);
   }
   messagesHandler(message, ws) {
     let obj;
@@ -59,7 +63,7 @@ class ServerSocket {
     } catch (error) {
       console.error(error);
     }
-    if (!"instruction" in obj) {
+    if (!("instruction" in obj)) {
       return;
     }
     if (obj.instruction == "offer") {
@@ -89,52 +93,47 @@ class ServerSocket {
       );
     }
     if (obj.instruction == "lookforpair") {
+      const start = Date.now();
+      const timeout = 15000;
       const my_index = ServerSocket.CONNECTIONS.findIndex(
         (c) => c.socket === ws
       );
-      const start = Date.now();
-      const timeout = 15000;
-      const interval = setInterval(() => {
+      const my_connection = ServerSocket.CONNECTIONS[my_index];
+      my_connection.searchInterval = setInterval(() => {
         if (Date.now() - start > timeout) {
           console.log("Timeout: no pair found");
-          ServerSocket.CONNECTIONS[my_index].socket.send(
+          my_connection.socket.send(
             JSON.stringify({ instruction: "nopairfound" })
           );
-          clearInterval(interval);
+          clearInterval(my_connection.searchInterval);
           return;
         }
-        // console.log(ServerSocket.CONNECTIONS);
-
-        if (ServerSocket.CONNECTIONS[my_index].status == 1) {
-          clearInterval(interval);
+        if (my_connection.status == 1) {
+          clearInterval(my_connection.searchInterval);
           return;
         }
-        const indexes = [];
-        ServerSocket.CONNECTIONS.forEach((c, i) => {
-          if (c.status === 0 && c.socket != ws) indexes.push(i);
-        });
-
-        if (indexes.length > 0) {
-          const pairindex = indexes[0]; // pick first available
-          console.log(pairindex);
-
-          const my_uid = ServerSocket.CONNECTIONS[my_index].uid;
-          const other_uid = ServerSocket.CONNECTIONS[pairindex].uid;
-
-          ServerSocket.CONNECTIONS[my_index].status = 1;
-          ServerSocket.CONNECTIONS[my_index].pair = other_uid;
-
-          ServerSocket.CONNECTIONS[pairindex].status = 1;
-          ServerSocket.CONNECTIONS[pairindex].pair = my_uid;
-          ServerSocket.CONNECTIONS[my_index].socket.send(
-            JSON.stringify({ instruction: "createLocal" })
-          );
-          ServerSocket.CONNECTIONS[pairindex].socket.send(
-            JSON.stringify({ instruction: "waitForRemoteOffer" })
-          );
-
-          clearInterval(interval);
+        const pair_index = ServerSocket.CONNECTIONS.findIndex(
+          (c) => c.socket != ws && c.status == 0
+        );
+        if (pair_index == -1) {
+          return;
         }
+        const pair_connection = ServerSocket.CONNECTIONS[pair_index];
+        const my_uid = my_connection.uid;
+        const other_uid = pair_connection.uid;
+        my_connection.status = 1;
+        my_connection.pair = other_uid;
+
+        pair_connection.status = 1;
+        pair_connection.pair = my_uid;
+        my_connection.socket.send(
+          JSON.stringify({ instruction: "createLocal" })
+        );
+        pair_connection.socket.send(
+          JSON.stringify({ instruction: "waitForRemoteOffer" })
+        );
+
+        clearInterval(my_connection.searchInterval);
       }, 100);
       //to be removed
     }
