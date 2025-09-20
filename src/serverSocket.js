@@ -104,6 +104,11 @@ class ServerSocket {
                 instruction: "requestOffer",
               })
             );
+            ServerSocket.CONNECTIONS[pairindex].socket.send(
+              JSON.stringify({
+                instruction: "pairFound",
+              })
+            );
             break;
           }
         }
