@@ -78,7 +78,10 @@ class ServerSocket {
     if (obj.instruction == "answer") {
       const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
       const pair = ServerSocket.CONNECTIONS[index].pair;
-      ServerSocket.CONNECTIONS[pair].socket.send(
+      const pair_index = ServerSocket.CONNECTIONS.findIndex(
+        (c) => c.uid == pair
+      );
+      ServerSocket.CONNECTIONS[pair_index].socket.send(
         JSON.stringify({
           instruction: "remoteAnswer",
           answer: obj.answer,
@@ -89,8 +92,6 @@ class ServerSocket {
       const my_index = ServerSocket.CONNECTIONS.findIndex(
         (c) => c.socket === ws
       );
-      console.log("My id: " + my_index);
-
       const start = Date.now();
       const timeout = 15000;
       const interval = setInterval(() => {
