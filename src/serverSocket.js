@@ -60,18 +60,25 @@ class ServerSocket {
     if (!"instruction" in obj) {
       return;
     }
-    // if (obj.instruction == "offer") {
-    //   const timestampNs = process.hrtime.bigint();
-    //   const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
-    //   connection[index].looking_Start_time = timestampNs;
-    //   connection[index].offer = obj.offer;
-    //   // connection[index].status = 1;
-    // }
+    if (obj.instruction == "offer") {
+      const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
+      const pair = ServerSocket.CONNECTIONS[index].pair;
+      // connection[index].status = 1;
+    }
     if (obj.instruction == "lookforpair") {
       const my_index = ServerSocket.CONNECTIONS.findIndex(
         (c) => c.socket === ws
       );
+      const start = Date.now();
+      const timeout = 5000;
       while (true) {
+        if (Date.now() - start > timeout) {
+          console.log("Timeout: no pair found");
+          ServerSocket.CONNECTIONS[my_index].socket.send(JSON.stringify({
+            instruction: "nopairfound"
+          }))
+          break;
+        }
         if (ServerSocket.CONNECTIONS[my_index].status == 1) {
           break;
         }
@@ -84,17 +91,20 @@ class ServerSocket {
         }
         for (const pairindex of indexes) {
           if (ServerSocket.CONNECTIONS[pairindex].status == 0) {
-            const master = ServerSocket.CONNECTIONS[my_index].uid;
+            const my_uid = ServerSocket.CONNECTIONS[my_index].uid;
+            const other_uid = ServerSocket.CONNECTIONS[pairindex].uid;
             ServerSocket.CONNECTIONS[my_index].status = 1;
-            ServerSocket.CONNECTIONS[my_index].pair = pairindex;
+            ServerSocket.CONNECTIONS[my_index].pair = other_uid;
             ServerSocket.CONNECTIONS[my_index].master = master;
             ServerSocket.CONNECTIONS[pairindex].status = 1;
-            ServerSocket.CONNECTIONS[pairindex].pair = my_index;
+            ServerSocket.CONNECTIONS[pairindex].pair = my_uid;
             ServerSocket.CONNECTIONS[my_index].master = master;
-            ServerSocket.CONNECTIONS[my_index].socket.send(JSON.stringify({
-              
-            }))
-            //add break point
+            ServerSocket.CONNECTIONS[my_index].socket.send(
+              JSON.stringify({
+                instruction: "requestOffer",
+              })
+            );
+            break;
           }
         }
       }
