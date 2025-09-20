@@ -34,21 +34,23 @@ class ServerSocket {
       // Listen for messages from client
       ws.on("message", (message) => {
         console.log(`Received: ${message}`);
-
+        this.messagesHandler(message, ws);
         // Echo the message back to the client
-        ws.send(
-          JSON.stringify({
-            instruction: "",
-          })
-        );
       });
 
       // Handle client disconnect
       ws.on("close", () => {
         console.log("Client disconnected");
+        this.handleClose(ws);
       });
     });
     console.log("WebSocket server is running on ws://localhost:" + port);
+  }
+  handleClose(ws) {
+    const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
+    if (index !== -1) {
+      ServerSocket.CONNECTIONS.splice(index, 1);
+    }
   }
   messagesHandler(message, ws) {
     let obj;
@@ -62,15 +64,33 @@ class ServerSocket {
     }
     if (obj.instruction == "offer") {
       const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
+      console.log(ServerSocket.CONNECTIONS[index]);
       const pair = ServerSocket.CONNECTIONS[index].pair;
-      // connection[index].status = 1;
+      ServerSocket.CONNECTIONS[pair].socket.send(
+        JSON.stringify({
+          instruction: "remoteOffer",
+          offer: obj.offer,
+        })
+      );
+    }
+    if (obj.instruction == "answer") {
+      const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
+      const pair = ServerSocket.CONNECTIONS[index].pair;
+      ServerSocket.CONNECTIONS[pair].socket.send(
+        JSON.stringify({
+          instruction: "remoteAnswer",
+          answer: obj.answer,
+        })
+      );
     }
     if (obj.instruction == "lookforpair") {
       const my_index = ServerSocket.CONNECTIONS.findIndex(
         (c) => c.socket === ws
       );
+      console.log("My id: " + my_index);
+
       const start = Date.now();
-      const timeout = 5000;
+      const timeout = 15000;
       const interval = setInterval(() => {
         if (Date.now() - start > timeout) {
           console.log("Timeout: no pair found");
@@ -80,16 +100,21 @@ class ServerSocket {
           clearInterval(interval);
           return;
         }
+        // console.log(ServerSocket.CONNECTIONS);
+
         if (ServerSocket.CONNECTIONS[my_index].status == 1) {
           clearInterval(interval);
           return;
         }
         const indexes = [];
         ServerSocket.CONNECTIONS.forEach((c, i) => {
-          if (c.status === 0) indexes.push(i);
+          if (c.status === 0 && c.socket != ws) indexes.push(i);
         });
+
         if (indexes.length > 0) {
           const pairindex = indexes[0]; // pick first available
+          console.log(pairindex);
+
           const my_uid = ServerSocket.CONNECTIONS[my_index].uid;
           const other_uid = ServerSocket.CONNECTIONS[pairindex].uid;
 
@@ -99,17 +124,16 @@ class ServerSocket {
           ServerSocket.CONNECTIONS[pairindex].status = 1;
           ServerSocket.CONNECTIONS[pairindex].pair = my_uid;
           ServerSocket.CONNECTIONS[my_index].socket.send(
-            JSON.stringify({ instruction: "requestOffer" })
+            JSON.stringify({ instruction: "createLocal" })
           );
           ServerSocket.CONNECTIONS[pairindex].socket.send(
-            JSON.stringify({ instruction: "pairFound" })
+            JSON.stringify({ instruction: "waitForRemoteOffer" })
           );
 
           clearInterval(interval);
         }
       }, 100);
       //to be removed
-      
     }
   }
 }
