@@ -28,6 +28,8 @@ class Socket {
   }
 
   send(data) {
+    console.log(data);
+    
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(data);
     } else {
@@ -39,7 +41,7 @@ class Socket {
     if (typeof handler !== "object" || handler === null) {
       throw new Error("Handler must be a non-null object");
     }
-    Socket.RESPONSE_HANDLER.forEach((handler) => {
+    Socket.RESPONSE_HANDLER.forEach((response) => {
       if (handler.instruction === response.instruction) {
         return;
       }

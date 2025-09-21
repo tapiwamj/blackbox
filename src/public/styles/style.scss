@@ -1,0 +1,57 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+
+@mixin InterFonts {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-variation-settings: "slnt" 0;
+}
+@mixin default_values {
+  @include InterFonts;
+  position: relative;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  line-height: 1.4;
+  transition: 0.1s;
+}
+* {
+  @include default_values;
+}
+.chatCircleHolder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 50px;
+  min-height: 75vh;
+  padding: 50px;
+  div {
+    width: 200px;
+    height: 200px;
+    background-color: black;
+    border-radius: 100%;
+    audio{
+        opacity: 0;
+        position: absolute;
+    }
+  }
+}
+button {
+  display: block;
+  min-height: 35px;
+  text-align: center;
+  background-color: purple;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
