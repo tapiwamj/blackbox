@@ -1,4 +1,5 @@
 const WebSocket = require("ws");
+let fakerExists = false;
 class ServerSocket {
   static CONNECTIONS = [];
   constructor() {
@@ -26,11 +27,14 @@ class ServerSocket {
         searchInterval: null,
       });
       console.log("New client connected");
-      // ws.send(
-      //   JSON.stringify({
-      //     instruction: "ttt",
-      //   })
-      // );
+      if (fakerExists == false) {
+        ws.send(
+          JSON.stringify({
+            instruction: "faker",
+          })
+        );
+        fakerExists = true;
+      }
 
       // Listen for messages from client
       ws.on("message", (message) => {
