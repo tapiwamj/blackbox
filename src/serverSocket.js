@@ -92,6 +92,19 @@ class ServerSocket {
         })
       );
     }
+    if (obj.instruction == "icecandidate") {
+      const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
+      const pair = ServerSocket.CONNECTIONS[index].pair;
+      const pair_index = ServerSocket.CONNECTIONS.findIndex(
+        (c) => c.uid == pair
+      );
+      ServerSocket.CONNECTIONS[pair_index].socket.send(
+        JSON.stringify({
+          instruction: "icecandidate",
+          candidate: obj.candidate,
+        })
+      );
+    }
     if (obj.instruction == "lookforpair") {
       const start = Date.now();
       const timeout = 15000;
