@@ -28,6 +28,19 @@ class RTC {
       instruction: "icecandidate",
       callback: this.handleICE.bind(this),
     });
+    this.socket.register_response_handler({
+      instruction: "hangup",
+      callback: this.hangup.bind(this),
+    });
+  }
+  hangup() {
+    this.pc.close();
+    this.pc = null;
+    this.showHungupUI();
+  }
+  showHungupUI() {
+    $("#circle").removeClass("connecting connected");
+    $("#status").html("Ready to connect.");
   }
   async getAudioStream() {
     try {
@@ -68,7 +81,7 @@ class RTC {
     function animate() {
       const level = meter.getValue(); // dB value
       const norm = Math.min(Math.max((level + 60) / 60, 0), 1);
-      const scale = 1 + norm; // 1–2
+      let scale = Math.max(1, 1 + norm); // 1–2
       circle.style.transform = `scale(${scale})`;
       requestAnimationFrame(animate);
     }
@@ -114,7 +127,17 @@ class RTC {
     );
     console.log("Answer created");
   }
+  cancelPair() {
+    this.pc.close();
+    this.pc = null;
+    this.socket.send(
+      JSON.stringify({
+        instruction: "hangup",
+      })
+    );
+  }
   async init() {
+    $("#status").html("Finding pair...");
     this.pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
@@ -134,7 +157,19 @@ class RTC {
         this.pc.connectionState === "disconnected" ||
         this.pc.connectionState === "failed"
       ) {
+        $("#status").html("Host has left");
         console.log("Peer disconnected!");
+        this.hangup();
+      }
+      if (this.pc.connectionState === "connecting") {
+        $("#status").html("Pair found, connecting...");
+        console.log("Peer disconnected!");
+      }
+      if (this.pc.connectionState === "connected") {
+        console.log("Peer disconnected!");
+        $("#status").html("Connected");
+        $("#circle").removeClass("connecting connected");
+        $("#circle").addClass("connected");
       }
     };
     let stream;
