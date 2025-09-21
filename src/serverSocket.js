@@ -1,4 +1,5 @@
 const WebSocket = require("ws");
+let fakerExists = false;
 class ServerSocket {
   static CONNECTIONS = [];
   constructor() {
@@ -26,11 +27,14 @@ class ServerSocket {
         searchInterval: null,
       });
       console.log("New client connected");
-      // ws.send(
-      //   JSON.stringify({
-      //     instruction: "ttt",
-      //   })
-      // );
+      if (fakerExists == false) {
+        ws.send(
+          JSON.stringify({
+            instruction: "faker",
+          })
+        );
+        fakerExists = true;
+      }
 
       // Listen for messages from client
       ws.on("message", (message) => {
@@ -89,6 +93,19 @@ class ServerSocket {
         JSON.stringify({
           instruction: "remoteAnswer",
           answer: obj.answer,
+        })
+      );
+    }
+    if (obj.instruction == "icecandidate") {
+      const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
+      const pair = ServerSocket.CONNECTIONS[index].pair;
+      const pair_index = ServerSocket.CONNECTIONS.findIndex(
+        (c) => c.uid == pair
+      );
+      ServerSocket.CONNECTIONS[pair_index].socket.send(
+        JSON.stringify({
+          instruction: "icecandidate",
+          candidate: obj.candidate,
         })
       );
     }
