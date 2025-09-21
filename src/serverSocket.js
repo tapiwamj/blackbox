@@ -70,13 +70,21 @@ class ServerSocket {
     if (!("instruction" in obj)) {
       return;
     }
+    if (obj.instruction == "hangup") {
+      const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
+      const pair = ServerSocket.CONNECTIONS[index].pair;
+      const pairedConnection = ServerSocket.CONNECTIONS.find((c) => c.uid === pair);
+      pairedConnection.socket.send(
+        JSON.stringify({
+          instruction: "hangup",
+        })
+      );
+    }
     if (obj.instruction == "offer") {
       const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
       const pair = ServerSocket.CONNECTIONS[index].pair;
-      const pair_index = ServerSocket.CONNECTIONS.findIndex(
-        (c) => c.uid == pair
-      );
-      ServerSocket.CONNECTIONS[pair_index].socket.send(
+      const pairedConnection = ServerSocket.CONNECTIONS.find((c) => c.uid === pair);
+      pairedConnection.socket.send(
         JSON.stringify({
           instruction: "remoteOffer",
           offer: obj.offer,
@@ -86,10 +94,8 @@ class ServerSocket {
     if (obj.instruction == "answer") {
       const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
       const pair = ServerSocket.CONNECTIONS[index].pair;
-      const pair_index = ServerSocket.CONNECTIONS.findIndex(
-        (c) => c.uid == pair
-      );
-      ServerSocket.CONNECTIONS[pair_index].socket.send(
+      const pairedConnection = ServerSocket.CONNECTIONS.find((c) => c.uid === pair);
+      pairedConnection.socket.send(
         JSON.stringify({
           instruction: "remoteAnswer",
           answer: obj.answer,
@@ -99,10 +105,8 @@ class ServerSocket {
     if (obj.instruction == "icecandidate") {
       const index = ServerSocket.CONNECTIONS.findIndex((c) => c.socket === ws);
       const pair = ServerSocket.CONNECTIONS[index].pair;
-      const pair_index = ServerSocket.CONNECTIONS.findIndex(
-        (c) => c.uid == pair
-      );
-      ServerSocket.CONNECTIONS[pair_index].socket.send(
+      const pairedConnection = ServerSocket.CONNECTIONS.find((c) => c.uid === pair);
+      pairedConnection.socket.send(
         JSON.stringify({
           instruction: "icecandidate",
           candidate: obj.candidate,
