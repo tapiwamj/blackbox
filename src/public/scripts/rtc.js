@@ -1,5 +1,5 @@
 class RTC {
-  static FAKER = false;
+  static FAKER = true;
   constructor(socket) {
     this.socket = socket;
     this.register_socket_handlers();
@@ -9,6 +9,10 @@ class RTC {
     this.socket.register_response_handler({
       instruction: "createLocal",
       callback: this.createOffer.bind(this),
+    });
+    this.socket.register_response_handler({
+      instruction: "faker",
+      callback: this.handleFakerMessage.bind(this),
     });
     this.socket.register_response_handler({
       instruction: "remoteOffer",
@@ -43,12 +47,23 @@ class RTC {
       return null;
     }
   }
-  async startMicAnimation() {
+  async handleFakerMessage() {
+    RTC.FAKER = true;
+  }
+  fakerTrue() {
+    RTC.FAKER = true;
+  }
+  async startMicAnimation(stream) {
     const circle = document.getElementById("circle");
     await Tone.start(); // resume AudioContext on user click
     const mic = new Tone.UserMedia();
-    await mic.open(); // ask for permission
+    mic._stream = stream;
+    mic._mediaStream = stream;
+    const source = Tone.context.createMediaStreamSource(stream);
+    const inputNode = new Tone.Gain();
+    source.connect(inputNode.input);
     const meter = new Tone.Meter();
+    inputNode.connect(meter);
     mic.connect(meter);
     function animate() {
       const level = meter.getValue(); // dB value
@@ -69,7 +84,6 @@ class RTC {
     }
   }
   async createOffer() {
-    RTC.FAKER = true;
     const offer = await this.pc.createOffer();
     await this.pc.setLocalDescription(offer);
     this.socket.send(
@@ -114,6 +128,15 @@ class RTC {
         );
       }
     };
+    this.pc.onconnectionstatechange = () => {
+      console.log("Connection state:", this.pc.connectionState);
+      if (
+        this.pc.connectionState === "disconnected" ||
+        this.pc.connectionState === "failed"
+      ) {
+        console.log("Peer disconnected!");
+      }
+    };
     let stream;
     if (RTC.FAKER == true) {
       stream = await this.fakeMicFromFile();
@@ -138,15 +161,14 @@ class RTC {
       audio.srcObject = event.streams[0];
       audio.play().catch((err) => console.error("Play blocked:", err));
       audio.autoplay = true;
+      this.startMicAnimation(event.streams[0]);
     };
   }
   async fakeMicFromFile(fileUrl = "reality.mp3") {
     const audioContext = new AudioContext();
-    // Load audio file into <audio>
     const audio = new Audio(fileUrl);
     audio.crossOrigin = "anonymous"; // if needed
     audio.loop = true; // optional
-
     // Create source and destination
     const source = audioContext.createMediaElementSource(audio);
     // source.connect(audioContext.destination); // so you hear it too
