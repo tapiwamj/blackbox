@@ -13,6 +13,10 @@
   transition: 0.1s;
 }
 
+body {
+  background-color: #111111;
+}
+
 .chatCircleHolder {
   display: flex;
   align-items: center;
@@ -32,7 +36,7 @@
   width: 200px;
   height: 200px;
   margin-bottom: 20px;
-  box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+  box-shadow: rgba(17, 12, 46, 0.15) 0px 48px 100px 0px;
   background-color: grey;
   border-radius: 100%;
 }
@@ -87,4 +91,21 @@ button {
   padding: 0.4rem 1rem;
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+.lightsource {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+.lightray {
+  border-bottom: 100vh solid #41412c;
+  border-left: 25vw solid transparent;
+  border-right: 25vw solid transparent;
+  height: 0;
+  width: 70vw;
 }/*# sourceMappingURL=style.css.map */
