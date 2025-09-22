@@ -36,6 +36,11 @@
   background-color: grey;
   border-radius: 100%;
 }
+.pulsatingBox p {
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+}
 .pulsatingBox.connected {
   background: linear-gradient(to top, orange, #ffb347);
 }

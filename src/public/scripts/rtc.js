@@ -1,5 +1,6 @@
 class RTC {
   static FAKER = true;
+  static SEARCHING = false;
   constructor(socket) {
     this.socket = socket;
     this.register_socket_handlers();
@@ -30,10 +31,11 @@ class RTC {
     });
     this.socket.register_response_handler({
       instruction: "hangup",
-      callback: this.hangup.bind(this),
+      callback: this.hangupFromPair.bind(this),
     });
   }
-  hangup() {
+  hangupFromPair() {
+    RTC.SEARCHING = false;
     this.pc.close();
     this.pc = null;
     this.showHungupUI();
@@ -130,11 +132,13 @@ class RTC {
   cancelPair() {
     this.pc.close();
     this.pc = null;
+    RTC.SEARCHING = false;
     this.socket.send(
       JSON.stringify({
         instruction: "hangup",
       })
     );
+    this.showHungupUI();
   }
   async init() {
     $("#status").html("Finding pair...");
@@ -163,10 +167,8 @@ class RTC {
       }
       if (this.pc.connectionState === "connecting") {
         $("#status").html("Pair found, connecting...");
-        console.log("Peer disconnected!");
       }
       if (this.pc.connectionState === "connected") {
-        console.log("Peer disconnected!");
         $("#status").html("Connected");
         $("#circle").removeClass("connecting connected");
         $("#circle").addClass("connected");

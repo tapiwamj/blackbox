@@ -1,10 +1,10 @@
 import socket from "./socket.js";
 import rtcClass from "./rtc.js";
+import RTC from "./rtc.js";
 const rtc = new rtcClass(socket);
-let searching = false;
 let tapAgainTimeOut = null;
 $("#circle").on("click", function () {
-  if (searching == true) {
+  if (RTC.SEARCHING == true) {
     const ogStatus = $("#status").html();
     $("#status").html("Tap again to disconnect");
     if (tapAgainTimeOut == null) {
@@ -19,7 +19,7 @@ $("#circle").on("click", function () {
     }
     return;
   }
-  searching = true;
+  RTC.SEARCHING = true;
   rtc.init();
   $("#circle").removeClass("connecting connected");
   $("#circle").addClass("connecting");
