@@ -72,6 +72,10 @@
 }
 .pulsatingBox p {
   color: white;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+  pointer-events: none;
 }
 .pulsatingBox audio {
   opacity: 0;

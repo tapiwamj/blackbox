@@ -51,6 +51,7 @@
   &.connected {
     p {
       display: none;
+
     }
     background: linear-gradient(to top, orange, #ffb347);
   }
@@ -85,6 +86,8 @@
   }
   p {
     color: white;
+    user-select: none;
+    pointer-events: none;
   }
   audio {
     opacity: 0;
