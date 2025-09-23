@@ -1,8 +1,10 @@
+
 class RTC {
   static FAKER = true;
   static SEARCHING = false;
-  constructor(socket) {
+  constructor(socket, animator) {
     this.socket = socket;
+    this.animator = animator;
     this.register_socket_handlers();
   }
   register_socket_handlers() {
@@ -43,6 +45,7 @@ class RTC {
   showHungupUI() {
     $("#circle").removeClass("connecting connected");
     $("#status").html("Ready to connect.");
+    this.animator.startAnim();
   }
   async getAudioStream() {
     try {
@@ -163,7 +166,7 @@ class RTC {
       ) {
         $("#status").html("Host has left");
         console.log("Peer disconnected!");
-        this.hangup();
+        this.hangupFromPair();
       }
       if (this.pc.connectionState === "connecting") {
         $("#status").html("Pair found, connecting...");
@@ -172,6 +175,7 @@ class RTC {
         $("#status").html("Connected");
         $("#circle").removeClass("connecting connected");
         $("#circle").addClass("connected");
+        this.animator.stopAnim();
       }
     };
     let stream;
