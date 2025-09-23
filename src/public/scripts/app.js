@@ -1,7 +1,11 @@
 import socket from "./socket.js";
 import rtcClass from "./rtc.js";
+import animator from "./animator.js";
 import RTC from "./rtc.js";
-const rtc = new rtcClass(socket);
+const userVal = {
+  spawnInterval: null
+}
+const rtc = new rtcClass(socket, animator);
 let tapAgainTimeOut = null;
 $("#circle").on("click", function () {
   if (RTC.SEARCHING == true) {
@@ -24,3 +28,4 @@ $("#circle").on("click", function () {
   $("#circle").removeClass("connecting connected");
   $("#circle").addClass("connecting");
 });
+
